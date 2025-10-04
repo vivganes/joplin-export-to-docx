@@ -8,6 +8,7 @@ from pygments.lexers import guess_lexer, get_lexer_by_name
 from pygments.formatters.html import HtmlFormatter
 from bs4 import BeautifulSoup
 import re
+import os
 
 
 def set_run_font(run, monospace=False, bold=False, italic=False, color=None, size=9):
@@ -178,7 +179,7 @@ def handle_inline(element, para):
             handle_inline(child, para)
 
 
-def process_list(document, element, level=0):
+def process_list(document, element, level=0, folder_name=None):
     for idx, li in enumerate(element.find_all("li", recursive=False), start=1):
         style = "ListBullet" if element.name == "ul" else "ListNumber"
         para = document.add_paragraph(style=style)
@@ -190,17 +191,20 @@ def process_list(document, element, level=0):
             if isinstance(child, str) and child.strip() == "":
                 continue
             if getattr(child, "name", None) in ["ul", "ol"]:
-                process_list(document, child, level + 1)
+                process_list(document, child, level + 1, folder_name=folder_name)
             else:
                 if child.name == "img":
                     print("Found image tag", child)
                     run = para.add_run()
-                    run.add_picture(child["src"])
+                    img_src = child["src"]
+                    if folder_name and not os.path.isabs(img_src):
+                        img_src = os.path.join(folder_name, img_src)
+                    run.add_picture(img_src)
                 else:
                     handle_inline(child, para)
 
 
-def add_markdown_content(document, md_content, theme="friendly"):
+def add_markdown_content(document, md_content, theme="friendly", folder_name=None):
     html = markdown.markdown(md_content, extensions=["fenced_code", "tables"])
     print("Converted Markdown to HTML \n ", html)
     soup = BeautifulSoup(html, "html.parser")
@@ -217,12 +221,15 @@ def add_markdown_content(document, md_content, theme="friendly"):
                 if child.name == "img":
                     print("Found image tag", child)
                     run  = para.add_run()
-                    run.add_picture(child["src"], width=Cm(10))
+                    img_src = child["src"]
+                    if folder_name and not os.path.isabs(img_src):
+                        img_src = os.path.join(folder_name, img_src)
+                    run.add_picture(img_src, width=Cm(10))
                 else:
                     handle_inline(child, para)
 
         elif element.name in ["ul", "ol"]:
-            process_list(document, element, level=0)
+            process_list(document, element, level=0, folder_name=folder_name)
 
         elif element.name == "table":
             rows = element.find_all("tr")
@@ -272,19 +279,97 @@ def add_markdown_content(document, md_content, theme="friendly"):
             process_element(element)
 
 
-def convert_markdowns_to_docx(md_files, output_file, theme="friendly"):
+def read_chapters_file(chapters_file, folder_name=None):
+    """
+    Read chapters.txt file and return list of items to process.
+    Each item is either a markdown file path or a part name.
+    """
+    items = []
+    with open(chapters_file, "r", encoding="utf-8") as f:
+        for line in f:
+            line = line.strip()
+            if not line:
+                continue
+            
+            if line.startswith("<partname>"):
+                # Extract part name after the tag
+                part_name = line[10:].strip()  # Remove "<partname>" prefix
+                items.append({"type": "part", "name": part_name})
+            else:
+                # It's a markdown file
+                md_file = line
+                if folder_name and not os.path.isabs(md_file):
+                    md_file = os.path.join(folder_name, md_file)
+                items.append({"type": "markdown", "path": md_file})
+    
+    return items
+
+
+def add_part_page(document, part_name):
+    """
+    Add a page with just the part name text and a page break.
+    """
+    para = document.add_paragraph()
+    run = para.add_run(part_name)
+    run.font.size = Pt(16)
+    run.bold = True
+    para.alignment = 1  # Center alignment
+    document.add_page_break()
+
+
+def convert_markdowns_to_docx(md_files=None, output_file="combined.docx", theme="friendly", 
+                              chapters_file="chapters.txt", folder_name=None):
+    """
+    Convert markdown files to DOCX.
+    
+    Args:
+        md_files: List of markdown files (used if chapters_file is None)
+        output_file: Output DOCX file path
+        theme: Syntax highlighting theme
+        chapters_file: Path to chapters.txt file (takes precedence over md_files)
+        folder_name: Optional folder where markdown files are located
+    """
     document = Document()
-    for i, md_file in enumerate(md_files):
-        with open(md_file, "r", encoding="utf-8") as f:
-            md_content = f.read()
-        add_markdown_content(document, md_content, theme=theme)
-        if i < len(md_files) - 1:
-            document.add_page_break()
+    
+    # If chapters_file exists, use it; otherwise fall back to md_files
+    if chapters_file and os.path.exists(chapters_file):
+        items = read_chapters_file(chapters_file, folder_name)
+        
+        for i, item in enumerate(items):
+            if item["type"] == "part":
+                add_part_page(document, item["name"])
+            elif item["type"] == "markdown":
+                # if item path does not end with .md, add the md extension
+                if not item["path"].endswith(".md"):
+                    item["path"] += ".md"
+                with open(item["path"], "r", encoding="utf-8") as f:
+                    md_content = f.read()
+                add_markdown_content(document, md_content, theme=theme, folder_name=folder_name)
+                # Add page break after markdown files (but not after the last one)
+                if i < len(items) - 1:
+                    document.add_page_break()
+    
+    elif md_files:
+        # Fallback to original behavior with md_files list
+        for i, md_file in enumerate(md_files):
+            full_path = md_file
+            if folder_name and not os.path.isabs(md_file):
+                full_path = os.path.join(folder_name, md_file)
+            
+            with open(full_path, "r", encoding="utf-8") as f:
+                md_content = f.read()
+            add_markdown_content(document, md_content, theme=theme, folder_name=folder_name)
+            if i < len(md_files) - 1:
+                document.add_page_break()
+    
+    else:
+        raise ValueError("Either chapters_file must exist or md_files must be provided")
+    
     document.save(output_file)
 
 
 if __name__ == "__main__":
-    markdown_files = [ "chapter1.md"]
-    output_docx = "combined.docx"
-    convert_markdowns_to_docx(markdown_files, output_docx, theme="friendly")
+    # Test the new functionality with chapters.txt
+    output_docx = "book.docx"
+    convert_markdowns_to_docx(output_file=output_docx, theme="friendly", chapters_file="chapters.txt", folder_name="Test-First Copilot")
     print(f"Saved {output_docx}")
