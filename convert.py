@@ -231,6 +231,18 @@ def add_markdown_content(document, md_content, theme="friendly"):
             for r, row in enumerate(rows):
                 for c, cell in enumerate(row.find_all(["td", "th"])):
                     table.cell(r, c).text = cell.get_text(strip=True)
+        
+        elif element.name == "hr":
+            para = document.add_paragraph()
+            run = para.add_run()
+            border = OxmlElement('w:pBdr')
+            bottom = OxmlElement('w:bottom')
+            bottom.set(qn('w:val'), 'single')
+            bottom.set(qn('w:sz'), '1')
+            bottom.set(qn('w:space'), '0')
+            bottom.set(qn('w:color'), 'auto')
+            border.append(bottom)
+            para._element.get_or_add_pPr().append(border)
 
         elif element.name == "pre":
             code_tag = element.find("code")
