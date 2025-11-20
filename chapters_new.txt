@@ -1,0 +1,61 @@
+<partname>TEST FIRST COPILOT
+Cover Page
+Introduction
+<partname>THE COPILOT FUNDAMENTALS
+Chapter 1. What is AI_
+Chapter 2_ LLM Fundamentals
+Chapter 3_ Limitations of LLMs
+Chapter 4_ Mindset Shifts for using Github Copilot
+Chapter 5 - Different Avatars of Github Copilot
+<partname>THE STRATEGY
+Chapter 6_ Our strategy
+Chapter 7_ Test-First Thinking Fundamentals
+Chapter 8_ The C4 Model
+Chapter 9_ Test Pyramid
+Chapter 10_ Behavior Driven Development
+Chapter 11_ Multi-loop TDD
+<partname>THE BLUEPRINT
+Chapter 12_ The Blueprint
+<partname>DERIVING THE STRUCTURE
+Chapter 13_ Requirements
+Chapter 14_ Context Diagram
+Chapter 15_ Generate Entities
+Chapter 16_ Review Entities
+Chapter 17_ Fix Entities and Generate ERD
+Chapter 18_ Generate Containers
+Chapter 19_ Review Containers
+Chapter 20_ Fix Containers & Generate Container Di
+<partname>DERIVING THE DATABASE SCHEMA
+Chapter 21_ Generate DB Design
+Chapter 22_ Review DB Design
+Chapter 23_ Fix DB Design
+<partname>DERIVING THE HIGH-LEVEL BEHAVIOR
+Chapter 24_ Generate User Stories with Acceptance 
+Chapter 25_ Prepare End-End Test Project
+Generate Gherkin Scenarios for a User Story
+Review Gherkin Scenarios
+Fix Gherkin Scenarios
+Generate End-End Test Step Definitions
+Generate API Design
+Review API Design
+Fix API Design
+<partname>DERIVING THE DESIGN (PYTHON BACKEND)
+Generate Python Class Diagram
+Generate Python Sequence Diagram
+Review Python Design
+Fix Python Design
+<partname>DERIVING THE LOW-LEVEL BEHAVIOR (PYTHON BACKEND)
+Generate Python API Integration Tests
+Generate Python Unit Tests
+Generate Python Code
+<partname>DERIVING THE DESIGN (ANGULAR FRONTEND)
+Generate Angular Class Diagram
+Generate Angular Sequence Diagram
+Review Angular Design
+Fix Angular Design
+<partname>DERIVING THE LOW-LEVEL BEHAVIOR (ANGULAR FRONTEND)
+Generate Angular UI Integration Tests
+Generate Angular UI Unit Tests
+Generate Angular Code
+<partname>CONCLUSION
+Conclusion

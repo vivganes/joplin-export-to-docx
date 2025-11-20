@@ -1,5 +1,4 @@
 #!/usr/bin/env python
-import sys
 import panflute as pf
 
 def action(elem, doc):
